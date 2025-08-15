@@ -1,0 +1,109 @@
+import pandas as pd
+import numpy as np # Used for handling potential NaN values if needed in cleaning
+
+print("--- Step 1: Loading data ---")
+df = pd.read_csv('INTERNET USER.csv')
+print("Data loaded successfully!")
+print(df)
+
+#Basic analysis
+df.head()	
+df.tail()
+df.info()
+df.shape
+df.dtypes
+df.describe
+df.isnull().sum()
+df.isna().sum()
+df.duplicated().sum()
+
+
+#rename column name
+# 3. Rename columns for consistency and readability
+# Renaming 'Country or Area' to 'Country'
+df.rename(columns={'Country or Area': 'Country'}, inplace=True)
+print(df.head())
+
+#installing xlsxwriter
+!pip install xlsxwriter
+
+
+print("\n--- Step 3: Saving cleaned data to Excel ---")
+excel_file_name = 'internet_data_analysis.xlsx'
+
+writer = pd.ExcelWriter(excel_file_name, engine='xlsxwriter')
+df.to_excel(writer, sheet_name='Cleaned Data', index=False)
+print(f"Cleaned data saved to '{excel_file_name}' on sheet 'Cleaned Data'.")
+
+df_engineered = df.copy() # Create a copy to work on, preserving df
+# Calculate 'Non_Internet_Users'
+# Convert 'Internet Users' and 'Population' to numeric types first
+df_engineered['Internet Users'] = df_engineered['Internet Users'].str.replace(',', '').astype(int)
+df_engineered['Population'] = df_engineered['Population'].str.replace(',', '').astype(int)
+
+df_engineered['Non_Internet_Users'] = df_engineered['Population'] - df_engineered['Internet Users']
+print("Created 'Non_Internet_Users' column.")
+print(df_engineered['Non_Internet_Users'].head()) # Displaying head for brevity
+
+# Calculate 'Monthly_Internet_Users'
+df_engineered['Monthly_Internet_Users'] = df_engineered['Internet Users'] / 12
+print("\nCreated 'Monthly_Internet_Users' column.")
+print(df_engineered['Monthly_Internet_Users'].head())
+
+print("\n--- Step 5: Saving engineered features to Excel ---")
+# Write the engineered DataFrame to a new sheet
+df_engineered.to_excel(writer, sheet_name='Engineered Features', index=False)
+print(f"Engineered features saved to '{excel_file_name}' on sheet 'Engineered Features'.")
+
+import pandas as pd
+import numpy as np
+
+# Re-open the ExcelWriter to add the chart
+excel_file_name = 'internet_data_analysis.xlsx'
+
+# Use write mode 'w' to rewrite the entire file with the chart
+writer = pd.ExcelWriter(excel_file_name, engine='xlsxwriter', mode='w')
+
+# Re-saving Engineered Features sheet to include the new column
+df_engineered.to_excel(writer, sheet_name='Engineered Features', index=False)
+print(f"Engineered features updated in '{excel_file_name}' on sheet 'Engineered Features'.")
+
+workbook = writer.book
+worksheet = writer.sheets['Engineered Features']
+
+df_chart_data = df_engineered.sort_values(by='Monthly_Internet_Users', ascending=False).head(10)
+max_row = len(df_chart_data) + 1
+
+# Update column indices based on the engineered dataframe with the new column
+country_col = df_engineered.columns.get_loc('Country')
+monthly_internet_col = df_engineered.columns.get_loc('Monthly_Internet_Users')
+non_internet_col = df_engineered.columns.get_loc('Non_Internet_Users')
+
+chart1 = workbook.add_chart({'type': 'bar'})
+chart1.add_series({
+    'name': ['Engineered Features', 0, monthly_internet_col],
+    'categories': ['Engineered Features', 1, country_col, max_row, country_col],
+    'values': ['Engineered Features', 1, monthly_internet_col, max_row, monthly_internet_col],
+    'data_labels': {'value': True},
+})
+chart1.set_title({'name': 'Top 10 Countries by Each Monthly Internet Users'})
+chart1.set_x_axis({'name': 'Monthly Internet Users'})
+chart1.set_y_axis({'name': 'Country'})
+chart1.set_size({'width': 720, 'height': 576})
+worksheet.insert_chart('G2', chart1) # Adjust chart insertion cell if needed
+
+chart2 = workbook.add_chart({'type': 'bar'})
+chart2.add_series({
+    'name': ['Engineered Features', 0, non_internet_col],
+    'categories': ['Engineered Features', 1, country_col, max_row, country_col],
+    'values': ['Engineered Features', 1, non_internet_col, max_row, non_internet_col],
+    'data_labels': {'value': True},
+})
+chart2.set_title({'name': 'Top 10 Countries by Non-Internet Users for 1Year'})
+chart2.set_x_axis({'name': 'Non-Internet Users'})
+chart2.set_y_axis({'name': 'Country'})
+chart2.set_size({'width': 720, 'height': 576})
+worksheet.insert_chart('P2', chart2) # Insert the second chart next to the first one
+
+writer.close()
+print(f"Charts added to '{excel_file_name}' on sheet 'Engineered Features'.")
