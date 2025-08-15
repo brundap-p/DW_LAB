@@ -1,0 +1,96 @@
+!pip install --upgrade pymupdf
+import fitz  # PyMuPDF uses this name
+!pip install PyPDF2 pdfplumber tabula-py pandas
+import PyPDF2
+import pymupdf
+import pdfplumber
+import tabula
+import pandas as pd
+
+# Define file paths
+demo_pdf = "/content/Demographic_Report_with_Links.pdf"
+product_pdf = "/content/Product_Inventory_Report_with_Links.pdf"
+merged_pdf = "Merged_Report.pdf"
+# Function to extract text
+def extract_text(pdf_path):
+    with pdfplumber.open(pdf_path) as pdf:
+        for page_num, page in enumerate(pdf.pages, start=1):
+            text = page.extract_text()
+            print(f"\n--- Page {page_num} ---\n{text}")
+
+# Function to extract links
+def extract_links(pdf_path):
+    doc = fitz.open(pdf_path)
+    for page_num in range(len(doc)):
+        page = doc[page_num]
+        links = page.get_links()
+        for link in links:
+            if "uri" in link:
+                print(f"Page {page_num + 1}: {link['uri']}")
+    doc.close()
+
+# Function to extract images
+def extract_images(pdf_path):
+    doc = fitz.open(pdf_path)
+    for page_num in range(len(doc)):
+        page = doc[page_num]
+        images = page.get_images(full=True)
+        for img_index, img in enumerate(images):
+            xref = img[0]
+            base_image = doc.extract_image(xref)
+            image_bytes = base_image["image"]
+            image_ext = base_image["ext"]
+            filename = f"image_page{page_num+1}_{img_index}.{image_ext}"
+            with open(filename, "wb") as f:
+                f.write(image_bytes)
+            print(f"Extracted {filename}")
+    doc.close()
+
+# Function to merge PDFs
+def merge_pdfs(pdf1, pdf2, output):
+    merger = PyPDF2.PdfMerger()
+    merger.append(pdf1)
+    merger.append(pdf2)
+    merger.write(output)
+    merger.close()
+    print(f"Merged PDF created as {output}")
+
+# Function to extract tables from merged PDF
+def extract_tables_from_pdf(pdf_path):
+    print("Extracting tables from merged PDF...")
+    try:
+        dfs = tabula.read_pdf(pdf_path, pages="all", multiple_tables=True)
+        for i, df in enumerate(dfs):
+            print(f"\n--- Table {i + 1} ---")
+            print(df)
+    except Exception as e:
+        print("Error extracting tables:", e)
+# Main menu-driven program
+def main():
+    while True:
+        print("\n----- PDF Utility Menu -----")
+        print("1. Extract Text from Demographic Report")
+        print("2. Extract Links from Demographic Report")
+        print("3. Extract Images from Demographic Report")
+        print("4. Merge with Product Inventory Report")
+        print("5. Extract Tables from Merged PDF")
+        print("6. Exit")
+
+        choice = input("Enter your choice (1-6): ")
+
+        if choice == '1':
+            extract_text(demo_pdf)
+        elif choice == '2':
+            extract_links(demo_pdf)
+        elif choice == '3':
+            extract_images(demo_pdf)
+        elif choice == '4':
+            merge_pdfs(demo_pdf, product_pdf, merged_pdf)
+        elif choice == '5':
+            extract_tables_from_pdf(merged_pdf)
+        elif choice == '6':
+            print("Exiting program.")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+main()
