@@ -1,0 +1,130 @@
+#Load data
+import pandas as pd
+data = pd.read_csv('/content/unclean_smartwatch_health_data.csv')
+print(data)
+
+#csv to data frame
+df=pd.DataFrame(data)
+print(df)
+
+#Basic analysis
+df.info()
+df.describe()
+df.head()
+
+df.tail()
+df.isnull().sum()
+df.isna().sum()
+df.duplicated().sum()
+df.columns = df.columns.str.strip()
+df.drop_duplicates(inplace=True)
+
+#data cleaning
+df = df.dropna()
+df.isna().sum()
+df.isnull().sum()
+df.duplicated().sum()
+
+#outliers
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.figure(figsize=(8, 6))
+sns.boxplot(y=df['Blood Oxygen Level (%)'])
+plt.title('Box Plot of Blood Oxygen Level (%)')
+plt.xlabel('Blood Oxygen Level (%)')
+plt.show()
+
+#removing outliers using IQR
+numerical_cols = df.select_dtypes(include=['float64', 'int64']).columns
+
+Q1 = df[numerical_cols].quantile(0.25)
+Q3 = df[numerical_cols].quantile(0.75)
+IQR = Q3 - Q1
+
+# Filter out the outliers
+df_cleaned = df[~((df[numerical_cols] < (Q1 - 1.5 * IQR)) | (df[numerical_cols] > (Q3 + 1.5 * IQR))).any(axis=1)]
+
+print("Original DataFrame shape:", df.shape)
+print("Cleaned DataFrame shape:", df_cleaned.shape)
+
+#after removing outliers
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.figure(figsize=(8, 6))
+sns.boxplot(y=df_cleaned['Blood Oxygen Level (%)'])
+plt.title('Box Plot of Blood Oxygen Level (%) (Cleaned)')
+plt.xlabel('Blood Oxygen Level (%)') 
+plt.show()
+
+#Normalization
+from sklearn.preprocessing import MinMaxScaler
+
+numerical_cols = df.select_dtypes(include=['float64', 'int64']).columns
+
+scaler = MinMaxScaler()
+df_normalized = df.copy()
+df_normalized[numerical_cols] = scaler.fit_transform(df_normalized[numerical_cols])
+
+print("Original DataFrame:")
+display(df.head())
+print("\nNormalized DataFrame (Min-Max Scaling):")
+display(df_normalized.head())
+
+#filling missing values using mean
+df['Sleep Duration (hours)'] = pd.to_numeric(df['Sleep Duration (hours)'], errors='coerce')
+mean_sleep_duration = df['Sleep Duration (hours)'].mean()
+df['Sleep Duration (hours)'].fillna(mean_sleep_duration, inplace=True)
+
+#Feature engineering
+# Create a feature for 'Steps per hour of sleep'
+df['Steps_per_Sleep_Hour'] = df['Step Count'] / df['Sleep Duration (hours)']
+
+# Create a feature for the ratio of Heart Rate to Blood Oxygen Level
+df['HeartRate_BloodOxygen_Ratio'] = df['Heart Rate (BPM)'] / df['Blood Oxygen Level (%)']
+display(df.head())
+
+#fuzzy wuzzy
+!pip install fuzzywuzzy python-Levenshtein
+
+from fuzzywuzzy import fuzz
+
+# Example strings to compare
+string1 = "highly active"
+string2 = "Highly_Active"
+string3 = "Actve"
+
+# Using fuzz.ratio
+ratio1 = fuzz.ratio(string1, string2)
+ratio2 = fuzz.ratio(string1, string3)
+
+print(f"Fuzz ratio between '{string1}' and '{string2}': {ratio1}")
+print(f"Fuzz ratio between '{string1}' and '{string3}': {ratio2}")
+
+# Using fuzz.partial_ratio
+partial_ratio1 = fuzz.partial_ratio(string1, string2)
+partial_ratio2 = fuzz.partial_ratio(string1, string3)
+
+print(f"\nFuzz partial ratio between '{string1}' and '{string2}': {partial_ratio1}")
+print(f"Fuzz partial ratio between '{string1}' and '{string3}': {partial_ratio2}")
+
+#regular expression
+import re
+
+# Check for whitespace or capital letters in 'Activity Level'
+pattern = r'[A-Z\s]'
+
+whitespace_capital_issues = df[df['Activity Level'].apply(lambda x: re.search(pattern, str(x)) is not None)]
+
+print("Rows with whitespace or capital letter issues in 'Activity Level':")
+display(whitespace_capital_issues)
+
+# Find unique activity levels that start with 'S'
+starting_letter = 'S'
+pattern = rf'^{starting_letter}.*'
+
+unique_activity_levels_starting_with_S = df['Activity Level'][df['Activity Level'].apply(lambda x: re.match(pattern, str(x)) is not None)].unique()
+
+print(f"Unique activity levels starting with '{starting_letter}':")
+print(unique_activity_levels_starting_with_S)
