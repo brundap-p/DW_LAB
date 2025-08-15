@@ -1,0 +1,93 @@
+# Install necessary libraries (if not already installed)
+!pip install requests folium pandas
+
+import requests
+import pandas as pd
+import folium
+
+# Your API key from OpenWeatherMap
+# API_KEY = "YOUR_API_KEY"  # Paste your actual API key here
+
+cities = [
+    {"city": "Delhi", "country": "India", "lat": 28.6139, "lon": 77.2090, "AQI": 250},
+    {"city": "London", "country": "UK", "lat": 51.5074, "lon": -0.1278, "AQI": 70},
+    {"city": "New York", "country": "USA", "lat": 40.7128, "lon": -74.0060, "AQI": 90},
+    {"city": "Tokyo", "country": "Japan", "lat": 35.6895, "lon": 139.6917, "AQI": 60},
+    {"city": "Beijing", "country": "China", "lat": 39.9042, "lon": 116.4074, "AQI": 300},
+    {"city": "Cairo", "country": "Egypt", "lat": 30.0444, "lon": 31.2357, "AQI": 180},
+    {"city": "Moscow", "country": "Russia", "lat": 55.7558, "lon": 37.6173, "AQI": 110},
+    {"city": "Paris", "country": "France", "lat": 48.8566, "lon": 2.3522, "AQI": 85},
+    {"city": "Sydney", "country": "Australia", "lat": -33.8688, "lon": 151.2093, "AQI": 45},
+    {"city": "Bangkok", "country": "Thailand", "lat": 13.7563, "lon": 100.5018, "AQI": 160},
+]
+
+# Function to determine color based on AQI
+def get_color(aqi):
+    if aqi <= 50:
+        return 'green'
+    elif aqi <= 100:
+        return 'orange'
+    elif aqi <= 200:
+        return 'red'
+    else:
+        return 'purple'
+
+# Create static map with colored markers and legend
+map_static = folium.Map(location=[20, 0], zoom_start=2, tiles="CartoDB positron")
+
+for city in cities:
+    color = get_color(city["AQI"])
+
+    folium.CircleMarker(
+        location=[city["lat"], city["lon"]],
+        radius=10,
+        popup=(f"<b>City:</b> {city['city']}<br>"
+               f"<b>Country:</b> {city['country']}<br>"
+               f"<b>AQI:</b> {city['AQI']}"),
+        color=color,
+        fill=True,
+        fill_color=color,
+        fill_opacity=0.8
+    ).add_to(map_static)
+
+legend_html = """
+<div style="
+    position: fixed;
+    bottom: 40px; left: 40px; width: 180px; height: 140px;
+    background-color: white;
+    border:2px solid grey; z-index:9999; font-size:14px;
+    padding: 10px;">
+    <b>AQI Legend</b><br>
+    <i style='background:green; width:10px; height:10px; display:inline-block;'></i> Good (0–50)<br>
+    <i style='background:orange; width:10px; height:10px; display:inline-block;'></i> Moderate (51–100)<br>
+    <i style='background:red; width:10px; height:10px; display:inline-block;'></i> Unhealthy (101–200)<br>
+    <i style='background:purple; width:10px; height:10px; display:inline-block;'></i> Very Unhealthy (201+)<br>
+</div>
+"""
+map_static.get_root().html.add_child(folium.Element(legend_html))
+
+# Display the static map
+display(map_static)
+
+# Create map with pin-style markers
+map_pins = folium.Map(location=[20, 0], zoom_start=2, tiles="OpenStreetMap")
+
+# Add red pin-style markers with popups
+for city in cities:
+    popup_text = f"<b>City:</b> {city['city']}<br><b>Country:</b> {city['country']}<br><b>AQI:</b> {city['AQI']}"
+    folium.Marker(
+        location=[city['lat'], city['lon']],
+        popup=popup_text,
+        icon=folium.Icon(color='red', icon='info-sign')  # Red pin-style marker
+    ).add_to(map_pins)
+
+# Display the pin map
+display(map_pins)
+
+# Save the static map to an HTML file
+map_static.save("air_quality_map_static.html")
+
+# Save the pin map to an HTML file
+map_pins.save("air_quality_map_pins.html")
+
+print("Maps saved as HTML files.")
