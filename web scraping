@@ -1,0 +1,79 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import os
+from urllib.parse import urljoin
+
+# Create a directory to save images
+os.makedirs('downloaded_images', exist_ok=True)
+
+url = 'https://www.geeksforgeeks.org/'
+response = requests.get(url)
+soup = BeautifulSoup(response.content, 'html.parser')
+
+# Step 2: Extract links
+print("Extracting links:")
+links = soup.find_all('a', href=True)
+link_list = []
+for link in links:
+    href = link['href']
+    full_url = urljoin(url, href)
+    print(f"Link: {full_url}")
+    link_list.append(full_url)
+
+# Step 1: Extract and download images
+print("\nExtracting and downloading images:")
+images = soup.find_all('img')
+image_list = []
+
+for idx, img in enumerate(images):
+    img_src = img.get('src')
+    if img_src:
+        img_url = urljoin(url, img_src)
+        try:
+            img_data = requests.get(img_url).content
+            img_filename = f'downloaded_images/image_{idx}.jpg'
+            with open(img_filename, 'wb') as f:
+                f.write(img_data)
+            print(f"Saved: {img_filename}")
+            image_list.append(img_filename)
+        except Exception as e:
+            print(f"Error saving {img_url}: {e}")
+            image_list.append('')
+    else:
+        image_list.append('')
+
+# Step 3: Extract text
+print("\nExtracting text:")
+text_tags = soup.find_all(['p', 'h1', 'h2', 'h3', 'li'])
+text_list = []
+for tag in text_tags:
+    text = tag.get_text(strip=True)
+    if text:
+        print(f"Text: {text}")
+        text_list.append(text)
+
+# Step 4: Normalize lengths of lists
+max_len = max(len(text_list), len(image_list), len(link_list))
+text_list += [''] * (max_len - len(text_list))
+image_list += [''] * (max_len - len(image_list))
+link_list += [''] * (max_len - len(link_list))
+
+# Step 5: Create DataFrame
+df = pd.DataFrame({
+    'Extracted Text': text_list,
+    'Image File': image_list,
+    'Link URL': link_list
+})
+print(df)
+
+# Step 6: Save to CSV
+df.to_csv('extracted_data.csv', index=False)
+print("\nData saved to 'extracted_data.csv'")
+
+#basic analysis
+df.info
+df.head()
+df.tail()
+df.describe()
+df.isna().sum()
