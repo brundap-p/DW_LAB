@@ -1,0 +1,200 @@
+#load data
+
+import xml.etree.ElementTree as ET  # Import the module
+# Step 1: Load and parse the XML file
+tree = ET.parse('MOVIEDATA2.xml')
+root = tree.getroot()
+
+# step 2 : dispay the xml data
+xml_string = ET.tostring(root, encoding='unicode')
+print(xml_string)
+
+#accessing
+import xml.etree.ElementTree as ET
+
+# Step 1: Load and parse the XML file
+tree = ET.parse('MOVIEDATA2.xml')
+root = tree.getroot()
+
+
+
+# Step 2: Iterate through movie elements and extract data
+for movie in root.findall('movie'):
+    name = movie.find('name').text
+    director = movie.find('director').text
+    print(f"Movie Name: {name}, Director: {director}")
+#updating
+movie_to_update = root.find("./movie[name='Black Widow']")
+
+# Update the director's name - This will cause an error if movie_to_update is None
+movie_to_update.find('director').text = 'Bansali'
+
+# Save the changes back to the file
+tree.write('MOVIEDATA2.xml')
+print("Director name updated successfully.")
+
+#ading new element
+# Create a new movie element
+new_movie = ET.Element('movie')
+
+# Add child elements to the new movie element
+name_element = ET.SubElement(new_movie, 'name')
+name_element.text = 'KGF2'
+
+director_element = ET.SubElement(new_movie, 'director')
+director_element.text = 'PRASHANTH NEEL'
+
+# Add new elements for genre, budget, profit, and loss
+genre_element = ET.SubElement(new_movie, 'genre')
+genre_element.text = 'Action' # Example genre
+
+budget_element = ET.SubElement(new_movie, 'budget')
+budget_element.text = '100000000' # Example budget
+
+profit_element = ET.SubElement(new_movie, 'profit')
+profit_element.text = '5000000000' # Example profit
+
+loss_element = ET.SubElement(new_movie, 'loss')
+loss_element.text = '0' # Example loss
+
+# Append the new movie element to the root
+root.append(new_movie)
+
+# Save the changes back to the file
+tree.write('MOVIEDATA2.xml')
+
+print("New movie added successfully.")
+
+#installing xmltodict
+!pip install xmltodict
+
+#xml to json
+#convert xml to json
+import xmltodict
+import json
+
+# Convert XML to a Python dictionary
+xml_dict = xmltodict.parse(xml_string)
+
+# Convert the dictionary to a JSON string
+json_string = json.dumps(xml_dict, indent=4)
+
+print(json_string)
+
+#json to data frame
+#json to data frame
+import pandas as pd
+
+movies_list = xml_dict['movies']['movie']
+df = pd.DataFrame(movies_list)
+
+# To see the DataFrame, run:
+print(df)
+
+#basic analysis
+df.head()
+df.info()
+df.head()
+df.tail()
+df.describe
+df['loss'].astype('int')
+df.columns.str.strip()
+df.isna().sum()
+df.isnull().sum()
+
+# Convert 'budget', 'profit', and 'loss' columns to numeric types
+df['budget'] = pd.to_numeric(df['budget'])
+df['profit'] = pd.to_numeric(df['profit'])
+df['loss'] = pd.to_numeric(df['loss'])
+
+# Calculate total earnings (profit - loss)
+df['total_earnings'] = df['profit'] - df['loss']
+#FEATURE ENGINEERING
+# Calculate profit/loss percentage
+df['profit_loss_percentage'] = ((df['total_earnings'] / df['budget']) * 100).round(2)
+print(df['profit_loss_percentage'])
+
+print(df)
+# Sort the DataFrame by 'profit_loss_percentage' in descending order
+df_sorted = df.sort_values(by='profit_loss_percentage', ascending=False)
+
+# Get the director's name from the first row (which has the highest percentage)
+director_highest_profit = df_sorted.iloc[0]['director']
+
+# Print the director's name
+print(f"Director with the highest profit/loss percentage: {director_highest_profit}")
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Create a density plot for the standard-scaled profit
+plt.figure(figsize=(8, 6))
+sns.histplot(df['profit_scaled'], kde=True,color='purple')
+
+# Add labels and title
+plt.xlabel('Scaled Profit')
+plt.ylabel('frequency')
+plt.title('Standard Scaled Profit')
+
+# Display the plot
+plt.show()
+
+import pandas as pd
+
+Q1 = df['profit'].quantile(0.25)
+Q3 = df['profit'].quantile(0.75)
+
+# Calculate the Interquartile Range (IQR)
+IQR = Q3 - Q1
+
+# Define the lower and upper bounds for outlier detection
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+# Print the calculated values
+print(f"Q1: {Q1}")
+print(f"Q3: {Q3}")
+print(f"IQR: {IQR}")
+print(f"Lower Bound: {lower_bound}")
+print(f"Upper Bound: {upper_bound}")
+
+# Find outliers
+outliers = df[(df['profit'] < lower_bound) | (df['profit'] > upper_bound)]
+
+# Print the outliers
+print("\nOutliers in the 'profit' column (using IQR method):")
+print(outliers)
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Create a box plot for the 'profit' column
+plt.figure(figsize=(8, 6))
+sns.boxplot(y=df['profit'])
+
+# Add labels and title
+plt.xlabel('Profit')
+plt.title('Box Plot to Show Outliers')
+
+# Display the plot
+plt.show()
+
+# Remove the outliers from the DataFrame
+df_no_outliers = df[(df['profit'] >= lower_bound) & (df['profit'] <= upper_bound)]
+
+# To see the DataFrame without outliers, run:
+print(df_no_outliers)
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Create a box plot for the 'profit' column of the DataFrame without outliers
+plt.figure(figsize=(8, 6))
+sns.boxplot(y=df_no_outliers['profit'])
+
+# Add labels and title
+plt.xlabel('Profit (Outliers Removed)')
+plt.title('Box Plot of Profit After Outlier Removal')
+
+# Display the plot
+plt.show()
