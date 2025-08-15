@@ -1,0 +1,116 @@
+!pip install pymongo
+import pymongo
+import json
+from pymongo import MongoClient
+
+!python --version
+
+!pip install pymongo[srv] dnspython --quiet
+from pymongo import MongoClient
+
+connection_string = "mongodb+srv://brundap0309:brundadb39@cluster0.vjsdhw2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+try:
+  client = MongoClient(connection_string,tls=True,tlsAllowInvalidCertificates=True)
+  client.admin.command('ping')
+  print("Connected successfully!!!")
+  db=client['data_wrangling_db']
+  collection=db['unstructured_data']
+  doc = collection.find_one()
+  print("sample document from collection:",doc)
+except Exception as e:
+  print("Could not connect to MongoDB:",{e})
+
+sample_doc={
+    "name":"lavanya",
+    "topic":"data wrangling",
+    "success":True
+}
+insert_result=collection.insert_one(sample_doc)# retrieve the document inserted
+print("inserted document ID:",insert_result.inserted_id)#inserting more document
+
+doc=collection.find_one({"_id":insert_result.inserted_id})
+print("retrieved document:",doc)
+more_docs=[
+    {"name":"studentA","subject":"math","score":78},
+    {"name":"studentB","subject":"science","score":89},
+
+    {"name":"studentC","subject":"english","score":90},
+]
+collection.insert_many(more_docs)
+print("more documents inserted")#retrieve all the document and perform one filter condition
+
+print("all documents in the collection:")
+for doc in collection.find():
+  print(doc)
+
+high_score = collection.find({"score": {"$gt": 80}})
+print("documents with score greater than 90:")
+for doc in high_score:
+  print(doc)
+
+!pip install pymongo[srv] dnspython --quiet
+from pymongo import MongoClient
+
+connection_string = "mongodb+srv://brundap0309:brundadb39@cluster0.vjsdhw2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+try:
+  client = MongoClient(connection_string,tls=True,tlsAllowInvalidCertificates=True)
+  client.admin.command('ping')
+  print("Connected successfully!!!")
+  db=client['data_wrangling_db']
+  collection=db['unstructured_data']
+  doc = collection.find_one()
+  print("sample document from collection:",doc)
+except Exception as e:
+  print("Could not connect to MongoDB:",{e})
+
+new_collection = db['additional_data']
+print("New collection object created:", new_collection)
+
+additional_docs = [
+    {"student_name": "studentA", "city": "New York"},
+    {"student_name": "studentB", "city": "Los Angeles"},
+    {"student_name": "studentC", "city": "Chicago"},
+    {"student_name": "studentD", "city": "Houston"}
+]
+insert_result_additional = new_collection.insert_many(additional_docs)
+print("Additional documents inserted with IDs:", insert_result_additional.inserted_ids)
+
+import base64
+
+# Replace 'path/to/your/image.jpg' with the actual path to your image file
+image_path = "/content/ramu.jpg"
+
+# Read the image file and encode it in Base64
+try:
+  with open(image_path, "rb") as f:
+    encoded_image = base64.b64encode(f.read()).decode("utf-8")
+
+  # Create a document to insert into the collection
+  image_doc = {
+      "image": encoded_image
+  }
+
+  # Specify the collection to insert the image into
+  images_col = db['images'] # Assuming 'db' is your database object from previous steps
+
+  # Insert the document into the collection
+  insert_result = images_col.insert_one(image_doc)
+
+  if insert_result.inserted_id:
+    print(f"Image inserted successfully with ID: {insert_result.inserted_id}")
+  else: 
+    print("Image insertion failed.")
+
+except FileNotFoundError:
+  print(f"Error: Image file not found at '{image_path}'")
+import pandas as pd
+
+# Retrieve all documents from the 'joined_students_data_modified' collection
+joined_collection_modified = db['joined_students_data_modified']
+data = list(joined_collection_modified.find())
+
+# Convert the list of documents to a pandas DataFrame
+df = pd.DataFrame(data)
+
+# Display the first few rows of the DataFrame
+display(df)
