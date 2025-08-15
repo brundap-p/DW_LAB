@@ -1,0 +1,111 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from google.colab.patches import cv2_imshow
+
+# Cell 1: Extract video properties
+video_path = "/content/bee-11531_128.mp4"
+cap = cv2.VideoCapture(video_path)
+
+frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+fps = cap.get(cv2.CAP_PROP_FPS)
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+duration = frame_count / fps
+
+print(f"Video Path: {video_path}")
+print(f"Total Frames: {frame_count}")
+print(f"FPS: {fps}")
+print(f"Resolution: {width}x{height}")
+print(f"Duration (seconds): {duration:.2f}")
+
+cap.release()
+
+# Cell 2: Display original frames
+cap = cv2.VideoCapture("/content/bee-11531_128.mp4")
+frame_num = 0
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    cv2_imshow(frame)
+
+    frame_num += 1
+
+cap.release()
+
+# Cell 3: Display grayscale frames
+cap = cv2.VideoCapture("/content/bee-11531_128.mp4")
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    cv2_imshow(gray_frame)
+
+cap.release()
+
+# Cell 4: Display resized frames
+cap = cv2.VideoCapture("/content/bee-11531_128.mp4")
+new_width = 640
+new_height = 360
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    resized_frame = cv2.resize(frame, (new_width, new_height))
+
+    cv2_imshow(resized_frame)
+
+cap.release()
+
+# Cell 6: Gaussian blur
+sigma = float(input("Enter sigma value for Gaussian Blur: "))
+cap = cv2.VideoCapture("/content/bee-11531_128.mp4")
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    blurred_frame = cv2.GaussianBlur(frame, (0, 0), sigmaX=sigma)
+
+    cv2_imshow(blurred_frame)
+
+cap.release()
+
+# Cell 5: Contrast normalization and plotting
+cap = cv2.VideoCapture(video_path)
+ret, frame = cap.read()
+cap.release()
+
+low_contrast_frame = np.clip(frame, 100, 150).astype(np.uint8)
+pixels_before = low_contrast_frame.flatten()
+
+normalized_frame = cv2.normalize(low_contrast_frame, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+pixels_after = normalized_frame.flatten()
+
+plt.figure(figsize=(12, 5))
+
+plt.subplot(1, 2, 1)
+sns.kdeplot(pixels_before, fill=True, color='orange')
+plt.title("Before Normalization (Low Contrast)")
+plt.xlabel("Pixel Value")
+plt.ylabel("Density")
+
+plt.subplot(1, 2, 2)
+sns.kdeplot(pixels_after, fill=True, color='green')
+plt.title("After Normalization (Stretched)")
+plt.xlabel("Pixel Value")
+plt.ylabel("Density")
+
+plt.tight_layout()
+plt.show()
