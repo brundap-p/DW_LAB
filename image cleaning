@@ -1,0 +1,107 @@
+import cv2
+import os
+from google.colab.patches import cv2_imshow
+
+# Load image
+image_path = "sun.jpg"
+image = cv2.imread(image_path)
+
+# Check if image is loaded
+if image is None:
+    print("Error: Could not load image.")
+else:
+    # Get dimensions
+    height, width = image.shape[:2]
+    channels = image.shape[2] if len(image.shape) == 3 else 1
+
+    # File size in KB
+    file_size = os.path.getsize(image_path) / 1024  # in KB
+
+    # Print information
+    print("Image Information:")
+    print(f"Path: {image_path}")
+    print(f"Width: {width}px")
+    print(f"Height: {height}px")
+    print(f"Channels: {channels}")
+    print(f"Image Size: {file_size:.2f} KB")
+    print(f"Image Type: {image.dtype}")
+
+    # Optionally show the image
+    cv2_imshow(image)
+from google.colab.patches import cv2_imshow
+#rotate
+rotated = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+print("Rotate image:")
+cv2_imshow(rotated)
+
+from google.colab.patches import cv2_imshow
+#rotate
+rotated = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
+print("Rotate image:")
+cv2_imshow(rotated)
+
+import cv2
+from google.colab.patches import cv2_imshow
+
+height, width = image.shape[:2]
+resized = cv2.resize(image, (width * 2, height * 2))
+print("Resize:")
+cv2_imshow(resized)
+#do // for small resize
+
+import cv2
+
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+print("Grayscale Image")
+cv2_imshow(gray)
+
+import cv2
+from google.colab.patches import cv2_imshow  # Use only if on Google Colab
+
+# Input sigma from user
+sigma = float(input("Enter sigma value (e.g., 1.0, 2.5): "))
+
+# Apply Gaussian Blur using sigma
+blurred = cv2.GaussianBlur(image, (0, 0), sigmaX=sigma, sigmaY=sigma)
+
+# Show original and blurred images
+print("Original Image:")
+cv2_imshow(image)
+
+print(f"\nGaussian Blurred Image with sigma={sigma}:")
+cv2_imshow(blurred)
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the image (color image)
+image = cv2.imread("sun.jpg")
+if image is None:
+    raise ValueError("Could not load the image. Check the path.")
+
+# Simulate low contrast image for demo
+low_contrast = np.clip(image, 100, 150)
+pixels_low = low_contrast.flatten()
+
+# Normalize it
+norm_low = np.zeros_like(image)
+cv2.normalize(low_contrast, norm_low, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+pixels_norm = norm_low.flatten()
+
+# Plot before
+plt.figure(figsize=(6, 4))
+sns.kdeplot(pixels_low, fill=True, color='blue')
+plt.title("Before Normalization (Low Contrast Simulated)")
+plt.xlabel("Pixel Value")
+plt.grid(True)
+plt.show()
+
+# Plot after
+plt.figure(figsize=(6, 4))
+sns.kdeplot(pixels_norm, fill=True, color='green')
+plt.title("After Normalization")
+plt.xlabel("Pixel Value")
+plt.grid(True)
+plt.show()
