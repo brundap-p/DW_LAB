@@ -1,0 +1,88 @@
+!pip install psycopg2 
+import psycopg2
+#connection
+conn = psycopg2.connect(
+    host='localhost',
+    dbname='postgres',
+    user='postgres',
+    password='54321'  # Replace with your actual password
+)
+cur = conn.cursor()
+conn.autocommit = False
+#create table 1
+cur.execute('''
+CREATE TABLE IF NOT EXISTS people2(
+    Id INT PRIMARY KEY,
+    Name VARCHAR(255),
+    Age INT,
+    Gender CHAR)
+''')
+#insert values
+cur.execute('''
+INSERT INTO people2 (Id, Name, Age, Gender) VALUES
+(10, 'Kartik', 26, 'M'),
+(20, 'Isha', 21, 'F'),
+(30, 'Akash', 27, 'M'),
+(40, 'Adhiraj', 25, 'M');
+''')
+cur.execute("SELECT * FROM people1 WHERE Age > 25")
+print(cur.fetchall())  # Output: [(10, 'Kartik', 26, 'M'), (30, 'Akash', 27, 'M')]
+#update table
+cur.execute('''UPDATE people2 set Age=25 where id=10''')
+cur.execute('''UPDATE people2 set Age=22 where id=20''')
+cur.execute('''UPDATE people2 set Age=26 where id=40''')
+conn.commit()
+#create table 2
+cur.execute('''
+CREATE TABLE IF NOT EXISTS people3(
+    Id INT PRIMARY KEY,
+    Name VARCHAR(255),
+    Age INT,
+    Profession VARCHAR(255))
+''')
+#insert values
+cur.execute('''
+INSERT INTO people3 (Id, Name, Age, Profession) VALUES
+(10, 'Ria', 26, 'Analyst'),
+(20, 'Charish', 25, 'Doctor'),
+(30, 'George', 30, 'Engineer'),
+(40, 'Ninad', 32, 'Teacher');
+''')
+conn.commit()
+#inner join
+cur.execute('''
+SELECT people3.name, people3.profession 
+FROM people3
+INNER JOIN people2 ON people2.id = people3.id
+''')
+print(cur.fetchall())
+#left join
+cur.execute('''
+SELECT p3.name, p2.name, p3.profession 
+FROM people2 p2
+LEFT JOIN people3 p3 ON p2.id = p3.id
+''')
+print(cur.fetchall())
+#right join
+cur.execute('''
+SELECT people3.name, people2.name, people3.profession 
+FROM people3 
+RIGHT JOIN people2 ON people2.id = people3.id
+''')
+print(cur.fetchall())
+#cross join
+cur.execute('''
+SELECT people3.name, people3.profession, people2.name 
+FROM people3 
+CROSS JOIN people2
+''')
+print(cur.fetchall())
+#order by
+cur.execute("SELECT * FROM people2 ORDER BY Age DESC")
+print(cur.fetchall())
+#where cluase
+cur.execute("SELECT * FROM people2 WHERE Id = 10")
+print(cur.fetchall())
+#close connection
+cur.close()
+conn.close()
