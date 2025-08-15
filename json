@@ -1,0 +1,117 @@
+#PARSING JSON FILE(CONVERT TO PYTHON OBJECT)
+import json
+
+with open("US_STATE_recipes.json", 'r') as f:
+    data = json.load(f)
+print(data)
+
+#ACCESSING ELEMENT
+print(type(data))
+print(data.keys())
+print(data["0"])
+print(data["8"]["title"])
+
+#UPDATING DATA
+
+#1.Update the title of the recipe with key "8"
+data["8"]["title"] = "New Recipe Title"
+print(data["8"]["title"])
+
+#2.Example: Add a new key "servings" to the recipe with key "0"
+data["0"]["servings"] = "4-6"
+print(data["0"])
+
+# ADDING NEW ELEMENT
+
+data["new_key"] = {
+    "title": "Brand New Recipe",
+    "ingredients": ["ingredient1", "ingredient2"],
+    "instructions": "Follow these steps."
+}
+print(data["new_key"])
+
+#convert to data frame
+import pandas as pd
+
+# Assuming 'data' is your dictionary from the previous code
+df = pd.DataFrame.from_dict(data, orient='index')
+print(df)
+
+#basic analysis
+print(df.head())
+print(df.tail())
+df.info()
+df.describe()
+# column strip
+df.columns.str.strip()
+
+#na and null
+df.isna().sum()
+df.isnull().sum()
+# Calculate the mean and performfillna
+mean_value = df['rating'].mean()
+df['rating'].fillna(mean_value, inplace=True)
+
+# Calculate the median and perform fillna
+median_value = df['cook_time'].median()
+df['cook_time'].fillna(median_value, inplace=True)
+
+# Calculate the mode and perform fillna
+mode_value = df['Contient'].mode()
+df['Contient'].fillna(mode_value, inplace=True)
+
+#cleaning
+df.dropna(inplace=True)
+df.isna().sum()
+df.drop_duplicates(inplace=True)
+df.isnull().sum()
+print(df.shape)
+
+from sklearn.preprocessing import StandardScaler
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Select numerical columns for standardization
+numerical_cols = ['rating'] # Add other numerical columns if needed
+
+# Create a StandardScaler instance
+scaler = StandardScaler()
+
+# Apply standardization to the selected columns
+df[numerical_cols] = scaler.fit_transform(df[numerical_cols])
+
+sns.histplot(data=df, x='rating', kde=True)
+plt.title('Density Plot with Histogram for Rating')
+plt.xlabel('Rating')
+plt.ylabel('Density')
+plt.show()
+
+#IQR
+import numpy as np
+q1 = np.percentile(df['rating'],25)
+q3 = np.percentile(df['rating'],75)
+iqr = q3 - q1
+
+lower_limit = q3 - 1.5 * iqr
+upper_limit = q3 + 1.5 * iqr
+
+print("q1:",q1)
+print("q3:",q3)
+print("iqr:",iqr)
+print("lower limit:",lower_limit)
+print("upper limit:",upper_limit)
+
+#after removing outliers
+sns.histplot(data=df_no_outliers, x='rating', kde=True)
+plt.title('Density Plot with Histogram for Rating (Outliers Removed)')
+plt.xlabel('Rating')
+plt.ylabel('Density')
+plt.show()
+
+#Feature ebgineering
+# FIND THE RATIO FOR COOKING TIME
+#A high ratio might indicate recipes that are quick to prepare but take a long time to cook,
+#while a low ratio suggests recipes with extensive prep but shorter cooking times.
+df['cook_to_prep_ratio'] = df['cook_time'] / (df['prep_time'])
+print(df['cook_to_prep_ratio'])
+print(df.head(5))
